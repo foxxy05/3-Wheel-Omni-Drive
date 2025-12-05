@@ -22,7 +22,7 @@ BTS7960 RW(5, 6);
 int8_t receivedData[arraySize] = { 0 };
 
 // Navigation Variables
-int16_t wLF = 0, wRF = 0, wLR = 0, wRR = 0;
+int16_t wFW = 0, wLW = 0, wRW = 0;
 int16_t Vx = 0, Vy = 0;
 int16_t VxG = 0, VyG = 0;
 int16_t omega = 0;
@@ -56,10 +56,9 @@ void setup() {
   Serial.println("UART1 is active!");
 
   // Setting the enable as HIGH for each BTS
-  LF.setEnable(true);
-  RF.setEnable(true);
-  LR.setEnable(true);
-  RR.setEnable(true);
+  FW.setEnable(true);
+  LW.setEnable(true);
+  RW.setEnable(true);
 
   // Initiating BNO and setting extCrystal as true
   if (!bno.begin()) {
@@ -74,10 +73,9 @@ void setup() {
 void loop() {
   imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
   currentAngle = 0;
-  wLF = 0;
-  wRF = 0;
-  wLR = 0;
-  wRR = 0;
+  wFW = 0;
+  wLW = 0;
+  wRW = 0;
   Vx = 0, Vy = 0;
   VxG = 0, VyG = 0;
   omega = 0;
@@ -122,15 +120,15 @@ void loop() {
   // }
 
   // Front wheel (120d)
-  wFW = map(constVector * (VxG*(minus1by2) + VyG*(sqrt3by2) + omega), -maxPWM, maxPWM);
+  wFW = constrain(constVector * (VxG*(minus1by2) + VyG*(sqrt3by2) + omega), -maxPWM, maxPWM);
   // Left Wheel (240d)
-  wRW = map(constVector * (VxG*(minus1by2) - VyG*(sqrt3by2) + omega), -maxPWM, maxPWM);
+  wLW = constrain(constVector * (VxG*(minus1by2) - VyG*(sqrt3by2) + omega), -maxPWM, maxPWM);
   // Right Wheel (0d)
-  wLW = map(constVector * (VxG - VyG*(0) + omega), -maxPWM, maxPWM);
+  wRW = constrain(constVector * (VxG - VyG*(0) + omega), -maxPWM, maxPWM);
 
   // Sending equation's values to BTS
   FW.rotate(wFW);
-  RF.rotate(wRW);
+  RW.rotate(wRW);
   LW.rotate(wLW);
 
   // targetAngle = currentAngle;
