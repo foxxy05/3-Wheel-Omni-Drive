@@ -4,9 +4,9 @@
 #define maxPWM 50
 // Add proper pins for PWM and enable according to board of choice
 // Directly add the PWM and enable pins when declaring the object
-BTS7960 FW(12, 11);
-BTS7960 LW(9, 10);
-BTS7960 RW(5, 6);
+BTS7960 FW(6, 7);
+BTS7960 LW(0, 1);
+BTS7960 RW(4, 5);
 
 
 // #define rad 0.55 // radius of the wheels
@@ -52,7 +52,7 @@ void setup() {
   Serial.println("I2C Master Ready!");
 
   // Setting-up UART communication between ESP32 and Arduino
-  Serial1.begin(9600);
+  Serial3.begin(9600);
   Serial.println("UART1 is active!");
 
   // Setting the enable as HIGH for each BTS
@@ -133,16 +133,16 @@ void loop() {
 
   // targetAngle = currentAngle;
   // printEq();
-  // printPS();
-  // delay(10);
+  printPS();
+  delay(10);
 }
 
 void receivePS4() {
   static bool receiving = false;
   static int index = 0;
 
-  while (Serial1.available()) {
-    uint8_t b = Serial1.read();
+  while (Serial3.available()) {
+    uint8_t b = Serial3.read();
 
     if (b == 0xFF) {  // Start marker
       receiving = true;
@@ -175,16 +175,16 @@ void receivePS4() {
 //   return PID;
 // }
 
-// void printPS() {
-//   Serial.print("LX : ");
-//   Serial.print(receivedData[0]);
-//   Serial.print("   ||   LY : ");
-//   Serial.print(receivedData[1]);
-//   Serial.print("   ||   L2 : ");
-//   Serial.print(receivedData[2]);
-//   Serial.print("   ||   R2 : ");
-//   Serial.println(receivedData[3]);
-// }
+void printPS() {
+  Serial.print("LX : ");
+  Serial.print(receivedData[0]);
+  Serial.print("   ||   LY : ");
+  Serial.print(receivedData[1]);
+  Serial.print("   ||   L2 : ");
+  Serial.print(receivedData[2]);
+  Serial.print("   ||   R2 : ");
+  Serial.println(receivedData[3]);
+}
 
 // void printEq() {
 //   Serial.print("ANGLE : ");
