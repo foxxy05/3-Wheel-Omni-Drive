@@ -10,9 +10,9 @@ int8_t slaveAddr = 5;
 #define maxPWM 50
 // Add proper pins for PWM and enable according to board of choice
 // Directly add the PWM and enable pins when declaring the object
-BTS7960 FW(6, 7);
+BTS7960 FW(5, 5);
 BTS7960 LW(0, 1);
-BTS7960 RW(4, 5);
+BTS7960 RW(2, 3);
 
 // Global Velocity Variables
 #define sqrt3by2 0.8660254038
@@ -93,24 +93,24 @@ void loop() {
 
   Vy = receivedData[0];  //Y-Component of the Joystick is the X component of the Chassis
   Vx = receivedData[1];
-  omega = receivedData[2] - receivedData[3];
+  omega = receivedData[3] + receivedData[2];
   VxG = Vx * cos(-theta) - Vy * sin(-theta);  // Local X
   VyG = Vx * sin(-theta) + Vy * cos(-theta);  // Local Y
 
 
-  // if (abs(omega) < 10) {
-  //   error = currentAngle - targetAngle;
-  //   if (error > 180) error -= 360;
-  //   if (error < -180) error += 360;
+  if (abs(omega) < 10) {
+    error = currentAngle - targetAngle;
+    if (error > 180) error -= 360;
+    if (error < -180) error += 360;
 
-  //   omega = PIDControl(error);
+    omega = PIDControl(error);
 
-  //   previousError = error;
-  //   previousTime = currentTime;
-  // } 
-  // else {
-  //   targetAngle = currentAngle;
-  // }
+    previousError = error;
+    previousTime = currentTime;
+  } 
+  else {
+    targetAngle = currentAngle;
+  }
 
   // Front wheel (120d)
   wFW = constrain(constVector * (VxG*(minus1by2) + VyG*(sqrt3by2) + omega), -maxPWM, maxPWM);
@@ -138,35 +138,35 @@ void requestPS4() {
     uint8_t raw = Wire2.read();
     if (i == 0) receivedData[0] = map(raw, 0, 255, -127, 127);       // LX
     else if (i == 1) receivedData[1] = map(raw, 0, 255, -127, 127);  // LY
-    else if (i == 2) receivedData[2] = map(raw, 0, 255, 0, 127);     // L2
-    else if (i == 3) receivedData[3] = map(raw, 0, 255, 0, -127);    // R2
+    else if (i == 2) receivedData[2] = map(raw, 0, 255, 0, -127);    // L2
+    else if (i == 3) receivedData[3] = map(raw, 0, 255, 0, 127);     // R2
 
     i++;
   }
 
-  // if (abs(receivedData[0]) < buffer) receivedData[0] = 0;
-  // if (abs(receivedData[1]) < buffer) receivedData[1] = 0;
-  // if (abs(receivedData[2]) < buffer) receivedData[2] = 0;
-  // if (abs(receivedData[3]) < buffer) receivedData[3] = 0;
+  if (abs(receivedData[0]) < buffer) receivedData[0] = 0;
+  if (abs(receivedData[1]) < buffer) receivedData[1] = 0;
+  if (abs(receivedData[2]) < buffer) receivedData[2] = 0;
+  if (abs(receivedData[3]) < buffer) receivedData[3] = 0;
 }
 
 
-// float PIDControl(int error) {
-//   currentTime = millis();
-//   int deltaT = (currentTime - previousTime);
-//   if (deltaT <= 0) {
-//     deltaT = 1;
-//   }
-//   derivative = (error - previousError) / (deltaT);
-//   PID = kp * error + kd * derivative;
-//   previousError = error;
-//   previousTime = currentTime;
-//   PID = constrain(PID, -maxPWM, maxPWM);
-//   if (abs(PID) <= 1) {
-//     PID = 0;
-//   }
-//   return PID;
-// }
+float PIDControl(int error) {
+  currentTime = millis();
+  int deltaT = (currentTime - previousTime);
+  if (deltaT <= 0) {
+    deltaT = 1;
+  }
+  derivative = (error - previousError) / (deltaT);
+  PID = kp * error + kd * derivative;
+  previousError = error;
+  previousTime = currentTime;
+  PID = constrain(PID, -maxPWM, maxPWM);
+  if (abs(PID) <= 1) {
+    PID = 0;
+  }
+  return PID;
+}
 
 void printPS() {
   Serial.print("LX : ");
@@ -180,8 +180,8 @@ void printPS() {
 }
 
 void printEq() {
-  // Serial.print("ANGLE : ");
-  // Serial.print(currentAngle);
+  Serial.print("ANGLE : ");
+  Serial.print(currentAngle);
   Serial.print("   ||   wLW : ");
   Serial.print(wLW);
   Serial.print("   ||   wFW : ");
